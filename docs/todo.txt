@@ -1,0 +1,19 @@
+improve type safety of luamanips
+move luamanips to a luaM_ syntax?
+add copy constructors for luaState and luaStream
+add various impl details to luaState and luaStream
+change pushObj to push?
+add debug callbacks to luaState and luaStream
+create luaDebug class to print to files (remove iostream dependency)
+turn debug functions into templates? //
+   such that luaDebug.h would look like...
+	void printIndex(int,luaD&)
+	void debugStack(lua_State*,luaD)
+	class luaD;
+	template <class luaL>
+	void debuglua(lua& obj,luaD& debugger) {
+		debugger.pass(debugHead(obj));
+		debugStack(*obj,debugger);
+		debugger.pass(debugBody(obj));
+		debugger.flush();
+	}

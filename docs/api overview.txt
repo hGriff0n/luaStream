@@ -1,0 +1,75 @@
+luaState.h
+  includes:
+    lua.hpp
+    <functional>
+    <string>
+  class:
+    luaState - c++ class wrapper of lua_State
+	note: luaState::openState must be user-defined to use custom constructor
+
+luaStream.h
+  includes:
+    luaState.h
+    <functional>
+  class:
+    luastream - stream interface to lua
+  functions:
+    addFile - override for <filesystem>
+
+luaManip.h
+  includes:
+    Utils.h
+    luaStream.h
+    <functional>
+  class:
+    lnManip - manipulator with no arguments
+    lManip - manipulator with one argument
+    ldManip - manipulator with two arguments
+  functions:
+    totop
+    insert
+    reverse
+    copy
+    remove
+    pack
+    unpack
+    merge
+    grab
+    set
+
+Utils.h
+  class:
+    <_Stream> baseManip - pure virtual class that all manipulators inherit from
+
+luaBindings.h
+  includes:
+    lua.hpp
+    luaClass.h
+    <string>
+  class:
+    error - exception type
+  functions:
+    luaRegEx - splits a string to enable tabled lookup of lua vars
+    toPosIndex - turns an index into a positive lua index
+    toNegIndex - turns an index into a negative lua index
+    addFile - loads a file into the lua_State
+    getVar - pushes the luaVar to the top of the stack
+    setVar - sets a luaVar to a specified value
+    pushObj - Adds the passed value to the lua stack
+    setcvar - sets the passed c var to the value at the top of the lua stack
+    luaL_newVar - wrapper of setVar
+    luaL_newFunc - wrapper of lua_register
+
+luaDebug.h
+  includes:
+    <iostream>
+    lua.hpp
+    luaState.h
+    luaStream.h
+  functions:
+    printIndex - outputs the value at the given index
+    debugStack - outputs the contents of the lua Stack to the string
+    debugState - debugStack with some extra luaState info
+    debugStream - debugState with some extra luastream info
+
+
