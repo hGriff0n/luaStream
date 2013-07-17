@@ -19,6 +19,7 @@ namespace lua {
 	||		copy:		given - luastream		-- currently private
 	||		luaFunc:	given - lua_State*
 	||	interface:
+	||		dumpImpl:	  return - string			given - void				use - dumpImpl()
 	||		operator*:	  return - lua_State*		given - void				use - *<stream>
 	||		load:		  return - void				given - file::path&			use - load(<path of lua script>)
 	||		move:		  return - void				given - luastream&,int		use - move(<stream to>,<num to move>)
@@ -59,6 +60,9 @@ namespace lua {
 			//luastream(const luastream&);
 			~luastream();
 
+			// state functions
+			std::string dumpImpl();					//	Returns the internal state as a string
+
 			// stack getters
 			luaState& get();						//	Returns internal luaState&
 			lua_State* operator*(void);				//	Returns internal lua_State*. Way to use luastream with lua functions (require lua_State*)
@@ -67,6 +71,7 @@ namespace lua {
 			void load(file::path&);					//	Load a file into lua
 			void move(luastream&,int=-1);			//	Move values into the passed luastream. Passes all values by default
 			bool call(std::string,int=0);			//	Calls the passed function with x arguments. Defaults to 0 arguments
+			bool call(int,int=LUA_MULTRET);			//	Wrapper over lua_pcall
 			void clear();							//	Clears the stack of all values
 
 			// stack info functions
@@ -74,6 +79,7 @@ namespace lua {
 			bool valid(int,int=0);					//	Is the passed index a valid lua index. Second arg adds to the stack size
 													//	(Stack's expected future size at time of use) (defaults to no change)
 			std::string typeat(int);				//	Returns the type of the value at stack[index]
+			bool typecheck(int,int);
 
 			// stack size operators
 			luastream& operator--();				//	Decreases the stack's size by one. Removes the top value from the stack
@@ -82,6 +88,7 @@ namespace lua {
 			luastream& operator++(int);
 
 			// stream operator overloads		-- override these to enable insertion and extraction of custom types
+			// do not override with templates if you want the manipulators to work (???)
 			friend luastream& operator<<(luastream&,int);
 			friend luastream& operator<<(luastream&,double);
 			friend luastream& operator<<(luastream&,const char*);
@@ -97,4 +104,10 @@ namespace lua {
 			static void totop(luastream&,int);		// Moves the value at <stream>[index] to the top of the stream
 	};
 
+	// debug overloads for luastream. Same usage as shown in luaBindings.h
+	int start(luastream&);
+	int end(luastream&);
+	std::string debugHead(luastream&);
+	std::string debugBody(luastream&);
+	lua_State* toluaCore(luastream&);
 };

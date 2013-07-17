@@ -9,7 +9,6 @@ namespace lua {
 	// luastream manipulator classes (distinquished by number of arguments)
 	// Uses std::function to store manipulator. Supports using lambdas in constructor
 	// Manipulator Arguments must be given to the class at construction time
-	// baseManip<luastream> should define insertion and extraction operators for the classes
 	
 	// No Arguments	(lua null)
 	class lnManip : public baseManip<luastream> {
@@ -39,7 +38,7 @@ namespace lua {
 			};
 	};
 
-	// Two Arguments (lua dual)
+	// Two Arguments (lua dual. Type of second argument is assumed to be the same as the first)
 	template <typename T, typename E=T>
 	class ldManip : public baseManip<luastream> {
 		private:
@@ -60,30 +59,43 @@ namespace lua {
 
 	// lua stack manipulation/organization
 
+	// Moves the object at the given index to the top of the lua stack
 	inline lManip<int> totop(int x) {
 		return lManip<int>(x,[](luastream& str,int x) -> luastream& {
 			luastream::totop(str,x);
 			return str;
 		});
 	};
+	// Inserts the object at the top of the lua stack at the given index
 	inline lManip<int> insert(int x) {
 		return lManip<int>(x,[](luastream& str,int x) -> luastream& {
 			if (!str.valid(x)) throw lua::error("lManip<int> insert","Invalid lua_State index");
-			lua_insert(*str,lua::toPosIndex(*str,x));
+			lua_insert(*str,x);
 			return str;
 		});
 	};
+	// Replaces the object at the given index with the object at the top of the lua stack
+	inline lManip<int> replace(int x) {
+		return lManip<int>(x,[](luastream& str,int x) -> luastream& {
+			if (!str.valid(x)) throw lua::error("lManip<int> replace","Invalid lua_State index");
+			lua_replace(*str,x);
+			return str;
+		});
+	};
+	// Reverses the order of the lua stack from index x to y (no arguments reverses the whole stack)
 	inline ldManip<int> reverse(int x=1,int y=-1) {
 		return ldManip<int>(x,y,[](luastream& str,int x,int y) -> luastream& {
 			x = lua::toPosIndex(*str,x);	y = lua::toPosIndex(*str,y);
 			if (!str.valid(x) || !str.valid(y)) throw lua::error("ldManip<int> reverse","Invalid lua_State index");
-			for(int i=0;i!=abs(y-x);++i) { 
-				luastream::totop(str,x);
-				lua_insert(*str,(y-i));
+			for(int i=0;i!=abs(y-x);++i) {			// loops z times (z being the range of the passed block)
+				luastream::totop(str,x);			// moves the object at the bottom of the block to the top of the stack
+				lua_insert(*str,(y-i));				// inserts the moved object to the top of the block (minus the number of loops)
+													//	-- object that was at index i will be inserted at index x because y-x = i
 			};
 			return str;
 		});
 	};
+	// Copies the item at index x and inserts it at index y (default- stack top)
 	inline ldManip<int> copy(int x,int y=-1) {
 		return ldManip<int>(x,y,[] (luastream& str,int x,int y) -> luastream& {
 			if (!str.valid(y,1)) throw lua::error("ldManip<int> copy","Invalid lua_State index");
@@ -92,6 +104,7 @@ namespace lua {
 			return str;
 		});
 	};
+	// Deletes the item at the given index
 	inline lManip<int> remove(int x) {
 		return lManip<int>(x,[](luastream& str,int x) -> luastream& {
 			if (!str.valid(x)) throw lua::error("lManip<int> remove","Invalid lua_State index");
@@ -102,10 +115,11 @@ namespace lua {
 
 	// table manipulations
 	
+	// Condenses the stack from index x to index y into a lua table (no arguments condenses the whole stack)
 	inline ldManip<int> pack(int x=1,int y=-1) {
 		return ldManip<int>(x,y,[](luastream& str, int x,int y) -> luastream& {
 			x = lua::toPosIndex(*str,x); y = lua::toPosIndex(*str,y);
-			int size = abs(y-x);
+			int size = abs(y-x);			// y, x2, x1, z
 
 			lua_createtable(*str,size,0);	// table, y, x2, x1, z
 
@@ -113,9 +127,11 @@ namespace lua {
 				luastream::totop(str,y-i);	// x1, table, y, x2, z
 				lua_rawseti(*str,-2,i+1);	// table, y, x2, z
 			}
-			return str;
+			// insert table at index x
+			return str;						// table, y, z
 		});
 	};
+	// Unpacks the table at the given index into its parts
 	inline lManip<int> unpack(int x=-1) {
 		return lManip<int>(x,[](luastream& str,int x) -> luastream& {
 			if (!str.valid(x)) throw lua::error("lManip<int> unpack","Invalid lua_State index");
@@ -129,6 +145,7 @@ namespace lua {
 			return str;
 		});
 	};
+	// Merges the two objects at index x and index y into one table
 	// Needs work. lua::pack doesn't produce a table (of type LUA_TTABLE)
 	inline ldManip<int> merge(int x,int y) {
 		return ldManip<int>(x,y,[](luastream& str,int x, int y) -> luastream& {
@@ -153,12 +170,14 @@ namespace lua {
 
 	// lua interaction
 
+	// Pushes the lua var of the given name onto the lua stack
 	inline lManip<std::string> grab(std::string name) {
 		return lManip<std::string>(name,[](luastream& str,std::string name) -> luastream& {
 			getVar(*str,name);
 			return str;
 		});
 	};
+	// Sets the lua var of the given name to the value at the given index
 	inline ldManip<std::string,int> set(std::string name,int index) {
 		return ldManip<std::string,int> (name,index,[](luastream& str,std::string name,int index) -> luastream& {
 			luastream::totop(str,index);

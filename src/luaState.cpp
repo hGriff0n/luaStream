@@ -1,6 +1,7 @@
 #include "luaState.h"
 //#include <vector>
 //#include <bitset>
+#include <sstream>
 
 namespace lua {
 
@@ -45,7 +46,6 @@ namespace lua {
 	luaState::~luaState() {
 		state->close(*this);
 		delete state;
-		L = nullptr;
 	};
 
 	// luaState unwrappers
@@ -55,6 +55,10 @@ namespace lua {
 	/*std::function<void(lua_State*)> luaState::getFunc() const {
 		return opener;
 	};*/
+	std::string luaState::dumpImpl() {
+		std::stringstream temp;
+
+	};
 
 	// luaState code loading
 
@@ -65,4 +69,22 @@ namespace lua {
 		return luaL_dostring(L,chunk.c_str());
 	};
 
+	// debug functions
+
+	int start(luaState& L) {
+		// Change later?
+		return 1;
+	};
+	int end(luaState& L) {
+		return lua_gettop(*L);
+	};
+	std::string debugHead(luaState& L) {
+		return "<---luaState debug information--->\n";
+	};
+	std::string debugBody(luaState& L) {
+		return (L.dumpImpl()+"\n");
+	};
+	lua_State* toluaCore(luaState& L) {
+		return *L;
+	};
 };

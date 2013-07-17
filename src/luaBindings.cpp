@@ -2,19 +2,19 @@
 
 namespace lua {
 	std::string luaRegEx(lua_State* L,std::string base,char seperator,int position) {
-		size_t length = base.find(seperator);
+		size_t length = base.find(seperator);				// find the first instance of the seperator in the string
 		if (length == std::string::npos) return base;
 
-		std::string table = base.substr(0,length);
-		std::string field = base.substr(length+1);
-		lua_getfield(L,position,table.c_str());
-
-		if (position != LUA_GLOBALSINDEX) lua_remove(L,-2);
-		return luaRegEx(L,field,seperator,-1);
+		std::string field = base.substr(0,length);			// split the string
+		std::string var = base.substr(length+1);
+		lua_getfield(L,position,field.c_str());				// get the field from the table at index position
+		
+		if (position != LUA_GLOBALSINDEX) lua_remove(L,-2);	// remove the parent table
+		return luaRegEx(L,var,seperator,-1);				// recursive call
 	};
 	int toPosIndex(lua_State* L,int index) {
 		if (index < 0) return lua_gettop(L)+index+1;
-		return index;
+		return index;		// return LUA_GLOBALSINDEX;	???
 	};
 	int toNegIndex(lua_State* L,int index) {
 		if (index > 0) return index-lua_gettop(L)-1;
@@ -78,5 +78,21 @@ namespace lua {
 
 	std::string error::what() {
 		return ("luaStream error in " + funcName + "\n" + errorMsg + "\n");
+	};
+
+	int start(lua_State* L) {
+		return 1;
+	};
+	int end(lua_State* L) {
+		return lua_gettop(L);
+	};
+	std::string debugHead(lua_State* L) {
+		return "<---lua_State debug information--->\n";
+	};
+	std::string debugBody(lua_State* L) {
+		return "\n"
+	};
+	lua_State* toluaCore(lua_State* L) {
+		return L;
 	};
 };

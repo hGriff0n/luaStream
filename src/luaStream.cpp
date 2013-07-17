@@ -1,6 +1,7 @@
 #include "luaStream.h"
 #include "luaBindings.h"
 // #include <bitset>
+#include <sstream>
 
 namespace lua {
 
@@ -54,9 +55,12 @@ namespace lua {
 
 	};
 	bool luastream::call(std::string func,int args) {
-		lua_pushstring(*stack,func.c_str());
-		lua_insert(*stack,-(args+1));
-		return lua_pcall(*stack,args,LUA_MULTRET,0);
+		lua_pushstring(*stack,func.c_str());			//	Push the name of the function onto the stack
+		lua_insert(*stack,-(args+1));					//	Insert the function under the arguments
+		return lua_pcall(*stack,args,LUA_MULTRET,0);	//	Call the function
+	};
+	bool luastream::call(int index,int numRet) {
+		return lua_pcall(*stack,(lua_gettop(*stack)-lua::toPosIndex(*stack,index)),numRet,0);
 	};
 	void luastream::clear() {
 		lua_settop(*stack,0);
@@ -69,6 +73,12 @@ namespace lua {
 		return toPosIndex(*stack,index) <= (lua_gettop(*stack)+adv) && index!=0;
 	};
 	std::string luastream::typeat(int index) { return lua_typename(*stack,index); };
+	bool luastream::typecheck(int index,int type) {	
+		if (type == LUA_TFUNCTION) {
+			return lua_isfunction(*stack,index);
+		} else
+			return (lua_type(*stack,index) == type);
+	};
 
 	// luastream stack size operators
 
@@ -139,5 +149,29 @@ namespace lua {
 		if (!str.valid(x)) throw lua::error("lManip<int> totop","Invalid lua_State index");
 		x = lua::toPosIndex(*str,x);
 		for(int i=1;i!=lua_gettop(*str)-x+1;++i) lua_insert(*str,x);		// loop might have problems
+	};
+
+	// state functions
+	std::string dumpImpl() {
+		//std::stringstream temp;
+		return " ";
+	};
+
+	// debug functions
+	int start(luastream& L) {
+		// change later?
+		return 1;
+	};
+	int end(luastream& L) {
+		return L.size();
+	};
+	std::string debugHead(luastream& L) {
+		return "<---luastream debug information--->\n";
+	};
+	std::string debugBody(luastream& L) {
+		return L.dumpImpl() + "\n";
+	};
+	lua_State* toluaCore(luastream& L) {
+		return *L;
 	};
 };
