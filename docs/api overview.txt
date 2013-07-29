@@ -4,17 +4,17 @@ luaState.h
     <functional>
     <string>
   class:
-    luaState - c++ class wrapper of lua_State
-	note: luaState::openState must be user-defined to use custom constructor
+    lua::luaState - c++ class wrapper of lua_State
+	note: luaState::openState must be user-defined to use default constructor
 
 luaStream.h
   includes:
     luaState.h
     <functional>
   class:
-    luastream - stream interface to lua
+    lua::luastream - stream interface to lua
   functions:
-    addFile - override for <filesystem>
+    lua::addFile - override for <filesystem>
 
 luaManip.h
   includes:
@@ -22,20 +22,20 @@ luaManip.h
     luaStream.h
     <functional>
   class:
-    lnManip - manipulator with no arguments
-    lManip - manipulator with one argument
-    ldManip - manipulator with two arguments
+    lua::lnManip - manipulator with no arguments
+    lua::lManip - manipulator with one argument
+    lua::ldManip - manipulator with two arguments
   functions:
-    totop
-    insert
-    reverse
-    copy
-    remove
-    pack
-    unpack
-    merge
-    grab
-    set
+    luaM_totop
+    luaM_insert
+    luaM_reverse
+    luaM_copy
+    luaM_remove
+    luaM_pack
+    luaM_unpack
+    luaM_merge
+    luaM_grab
+    luaM_set
 
 Utils.h
   class:
@@ -47,16 +47,16 @@ luaBindings.h
     luaClass.h
     <string>
   class:
-    error - exception type
+    lua::error - exception type
   functions:
-    luaRegEx - splits a string to enable tabled lookup of lua vars
-    toPosIndex - turns an index into a positive lua index
-    toNegIndex - turns an index into a negative lua index
-    addFile - loads a file into the lua_State
-    getVar - pushes the luaVar to the top of the stack
-    setVar - sets a luaVar to a specified value
-    pushObj - Adds the passed value to the lua stack
-    setcvar - sets the passed c var to the value at the top of the lua stack
+    lua::luaRegEx - splits a string to enable tabled lookup of lua vars
+    lua::toPosIndex - turns an index into a positive lua index
+    lua::toNegIndex - turns an index into a negative lua index
+    lua::addFile - loads a file into the lua_State
+    lua::getVar - pushes the luaVar to the top of the stack
+    lua::setVar - sets a luaVar to a specified value
+    lua::pushObj - Adds the passed value to the lua stack
+    lua::setcvar - sets the passed c var to the value at the top of the lua stack
     luaL_newVar - wrapper of setVar
     luaL_newFunc - wrapper of lua_register
 
@@ -66,10 +66,10 @@ luaDebug.h
     lua.hpp
     luaState.h
     luaStream.h
+  class:
+	<_stream> lua::debug - templated debug stream object
   functions:
-    printIndex - outputs the value at the given index
-    debugStack - outputs the contents of the lua Stack to the string
-    debugState - debugStack with some extra luaState info
-    debugStream - debugState with some extra luastream info
+    lua::printIndex - outputs the value at the given index
+    <luaL,_stream> lua::debuglua - outputs the passed lua object to the passed debug stream
 
 

@@ -8,21 +8,22 @@
 
 int main(int argc,const char* argv[]) {
 	using namespace std;
+	using namespace lua;
 
-	lua::luastream str;
+	luastream str;
 	bool test = true;
 	try {
-		str << 5 << 4 << 3 << 2 << 1 << lua::pack(3) << lua::unpack();
+		str << 5 << 4 << 3 << 2 << 1 << luaM_pack(3) << luaM_unpack();
 	}
 	catch (lua::error& e) {
 		cout << e.what();
 		cin.get(); exit(0);
 	};
 
-	lua::debugStack(cout,*str);
+	debugStack(cout,*str);
 	cin.get();
 };
 
-void lua::luaState::openState(lua_State* L) {
+void luaState::openState(lua_State* L) {
 	luaL_openlibs(L);
 };

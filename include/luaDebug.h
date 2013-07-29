@@ -29,8 +29,6 @@ namespace lua {
 	void debuglua(luaL& obj,debug<_stream>& debugger) {
 		debugger.pass(debugHead(obj));
 		for(int i=start(obj);i!=end(obj)+1;++i) {
-			// end returns size of lua stack
-			// start returns 1 or x if stack below x is unneccessary (?) Is this a good thing?
 			debugger.pass(printIndex(toluaCore(obj),i));
 		}
 		debugger.pass(debugBody(obj));

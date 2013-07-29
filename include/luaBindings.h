@@ -56,7 +56,7 @@ namespace lua {
 	// Helper functions
 
 	// Splits a lua var name based on passed char to enable tabled lookup of lua vars. Pushes the host table onto the stack if var isn't global
-	std::string luaRegEx(lua_State*,std::string,char='.',int=LUA_GLOBALSINDEX);
+	std::string luaSplice(lua_State*,std::string,char='.',int=LUA_GLOBALSINDEX);
 	// Turns given index into a pos/neg index based on the passed lua_State
 	int toPosIndex(lua_State*,int);
 	int toNegIndex(lua_State*,int);
