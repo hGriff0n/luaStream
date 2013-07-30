@@ -1,6 +1,5 @@
-move lua::error to a different syntax???
+improve type safety of luamanips
+move luamanips to a luaM_ syntax?
+add copy constructors for luaState and luaStream
 add various impl details to luaState and luaStream
 change pushObj to push?
-remove/edit luaBindings???
-add exception support to luaState
-have luaState and luastream dumpImpl return actual data

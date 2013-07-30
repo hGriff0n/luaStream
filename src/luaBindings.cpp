@@ -1,7 +1,7 @@
 #include "luaBindings.h"
 
 namespace lua {
-	std::string luaSplice(lua_State* L,std::string base,char seperator,int position) {
+	std::string luaRegEx(lua_State* L,std::string base,char seperator,int position) {
 		size_t length = base.find(seperator);				// find the first instance of the seperator in the string
 		if (length == std::string::npos) return base;
 
@@ -10,7 +10,7 @@ namespace lua {
 		lua_getfield(L,position,field.c_str());				// get the field from the table at index position
 		
 		if (position != LUA_GLOBALSINDEX) lua_remove(L,-2);	// remove the parent table
-		return luaSplice(L,var,seperator,-1);				// recursive call
+		return luaRegEx(L,var,seperator,-1);				// recursive call
 	};
 	int toPosIndex(lua_State* L,int index) {
 		if (index < 0) return lua_gettop(L)+index+1;
@@ -26,7 +26,7 @@ namespace lua {
 	};
 
 	void getVar(lua_State* L,std::string name) {
-		std::string field = luaSplice(L,name);
+		std::string field = luaRegEx(L,name);
 		if (field == name) {
 			lua_getglobal(L,field.c_str());
 		} else {
@@ -39,13 +39,13 @@ namespace lua {
 	void pushObj(lua_State* L,double data) {
 		lua_pushnumber(L,data);
 	};
-	void pushObj(lua_State* L,const char* data) {
+	void addArg(lua_State* L,const char* data) {
 		lua_pushstring(L,data);
 	};
 	void pushObjpushObj(lua_State* L,std::string data) {
 		lua_pushstring(L,data.c_str());
 	};
-	void pushObj(lua_State* L,bool data) {
+	void addArg(lua_State* L,bool data) {
 		lua_pushboolean(L,data);
 	};
 	void pushObj(lua_State* L,int data) {

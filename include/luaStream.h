@@ -51,12 +51,13 @@ namespace lua {
 			struct impl;
 			impl* state;
 
-			luastream& operator=(const luastream&);		// delete function keyword not currently supported in vs2012
+			luastream(const luastream&);			// copy
+			luastream& operator=(const luastream&);
 		public:
 			// constructors/destructors
 			luastream();							// default
 			luastream(lua_State*);					// luaFunc		Enables luastream use in functions registered with lua
-			luastream(const luastream&);			// thread		Same as luaState thread constructor
+			//luastream(const luastream&);
 			~luastream();
 
 			// state functions
@@ -64,20 +65,21 @@ namespace lua {
 
 			// stack getters
 			luaState& get();						//	Returns internal luaState&
-			lua_State* operator*(void);				//	Returns internal lua_State*
+			lua_State* operator*(void);				//	Returns internal lua_State*. Way to use luastream with lua functions (require lua_State*)
 
 			// stack interaction
 			void load(file::path&);					//	Load a file into lua
 			void move(luastream&,int=-1);			//	Move values into the passed luastream. Passes all values by default
 			bool call(std::string,int=0);			//	Calls the passed function with x arguments. Defaults to 0 arguments
+			bool call(int,int=LUA_MULTRET);			//	Wrapper over lua_pcall
 			void clear();							//	Clears the stack of all values
 
 			// stack info functions
 			int size();								//	Returns the number of values in the stack
 			bool valid(int,int=0);					//	Is the passed index a valid lua index. Second arg adds to the stack size
 													//	(Stack's expected future size at time of use) (defaults to no change)
-			std::string typeat(int);				//	Returns the type of the value at stack[index]		-- Mark
-			bool typecheck(int,int);				//	Checks if the value at stack[index] is the passed type
+			std::string typeat(int);				//	Returns the type of the value at stack[index]
+			bool typecheck(int,int);
 
 			// stack size operators
 			luastream& operator--();				//	Decreases the stack's size by one. Removes the top value from the stack
@@ -87,14 +89,14 @@ namespace lua {
 
 			// stream operator overloads		-- override these to enable insertion and extraction of custom types
 			// do not override with templates if you want the manipulators to work (???)
-			friend luastream& operator<<(luastream&,lua_Integer);
-			friend luastream& operator<<(luastream&,lua_Number);
+			friend luastream& operator<<(luastream&,int);
+			friend luastream& operator<<(luastream&,double);
 			friend luastream& operator<<(luastream&,const char*);
 			friend luastream& operator<<(luastream&,std::string);
 			friend luastream& operator<<(luastream&,bool);
 
-			friend luastream& operator>>(luastream&,lua_Integer&);
-			friend luastream& operator>>(luastream&,lua_Number&);
+			friend luastream& operator>>(luastream&,int&);
+			friend luastream& operator>>(luastream&,double&);
 			friend luastream& operator>>(luastream&,std::string&);
 			friend luastream& operator>>(luastream&,bool&);
 
@@ -109,53 +111,3 @@ namespace lua {
 	std::string debugBody(luastream&);
 	lua_State* toluaCore(luastream&);
 };
-
-// luastream overrides for lua functions
-// except lua_checkstack,lua_gettop,lua_typename,lua_type
-
-void lua_call(lua::luastream&,int,int);
-void lua_concat(lua::luastream&,int);
-int lua_cpcall(lua::luastream&,lua_CFunction,void*);
-void lua_createtable(lua::luastream&,int,int);				// lua_newtable is a macro and is defined by this line
-int lua_dump(lua::luastream&,lua_Writer,void*);
-int lua_equal(lua::luastream&,int,int);
-int lua_error(lua::luastream&);
-int lua_gc(lua::luastream&,int,int);
-void lua_getfenv(lua::luastream&,int);
-void lua_getfield(lua::luastream&,int,const char*);			// lua_getglobal is a macro and is defined by this line
-int lua_getmetatable(lua::luastream&,int);
-void lua_gettable(lua::luastream&,int);
-void lua_insert(lua::luastream&,int);
-int lua_iscfunction(lua::luastream&,int);
-int lua_isuserdata(lua::luastream&,int);
-int lua_isstring(lua::luastream&,int);
-int lua_lessthan(lua::luastream&,int,int);
-lua_State* lua_newthread(lua::luastream&);
-//void lua_newuserdata(lua::luastream&,size_t);
-int lua_next(lua::luastream&,int);
-size_t lua_objlen(lua::luastream&,int);
-int lua_pcall(lua::luastream&,int,int,int);
-void lua_pushcclosure(lua::luastream&,lua_CFunction,int);	// lua_pushcfunction/lua_register are macros and are defined by this line
-//const char* lua_pushfstring(lua::luastream&,const char*,...);
-void lua_pushlightuserdata(lua::luastream&,void*);
-int lua_pushthread(lua::luastream&);
-void lua_pushvalue(lua::luastream&,int);
-//const char* lua_pushvfstring(lua::luastream&,const char*,va_list);
-int lua_rawequal(lua::luastream&,int,int);
-void lua_rawget(lua::luastream&,int);
-void lua_rawgeti(lua::luastream&,int,int);
-void lua_rawset(lua::luastream&,int);
-void lua_rawseti(lua::luastream&,int,int);
-void lua_remove(lua::luastream&,int);
-void lua_replace(lua::luastream&,int);
-int lua_resume(lua::luastream&,int);
-int lua_setfenv(lua::luastream&,int);
-void lua_setfield(lua::luastream&,int,const char*);
-int lua_setmetatable(lua::luastream&,int);
-void lua_settable(lua::luastream&,int);
-void lua_settop(lua::luastream&,int);
-int lua_status(lua::luastream&);
-lua_CFunction lua_tocfunction(lua::luastream&,int);
-lua_State* lua_tothread(lua::luastream&,int);
-void lua_xmove(lua::luastream&,lua::luastream&,int);
-//lua_yield
