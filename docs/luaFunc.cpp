@@ -6,9 +6,9 @@ int luaTest(lua_State* L) {
 	lua::luastream stream(L);
 	try {
 		int x,y,z,addor;
-		stream >> lua::insert(-5) >> x >> y >> z;
+		stream >> luaM_insert(-5) >> x >> y >> z;
 		if (!stream.typecheck(-1,LUA_TFUNCTION)) throw lua::error("luaTest","invalid type at index");
-		stream.call(-2);
+		lua_pcall(stream,-2,LUA_MULTRET,1);
 		stream >> addor << (x+addor) << (y+addor) << (z+addor);
 		return 3;
 	}
@@ -50,16 +50,16 @@ int luastream_DcallDelegate(lua_State* L) {
 		(stream++) << true;
 		int sm = stream.size();
 		int ix = 1;
-		while (!lua_isnone(*stream, lua_upvalueindex(ix))) {
+		while (!lua_isnone(stream, lua_upvalueindex(ix))) {
 			(stream++) << lua_upvalueindex(ix++);
 		}
 		ix--;
 		if ((ix < 1) || (!stream.typecheck((-1 * ix),LUA_TFUNCTION))) return luaL_error(*stream, "Bad Deferred Call");
-		if (!stream.call(-ix,nret))
+		if (!lua_pcall(stream,ix-1,nret,efun))
 			return (stream.size() - sm + ((efun == 0)? 0 : 1)); 
 		else {
-			stream << false << lua::replace(sm);
-			return (efun == 0) ? lua_error(*stream) : 2;
+			stream << false << luaM_replace(sm);
+			return (efun == 0) ? lua_error(stream) : 2;
 		}
 	}
 	catch (lua::error& e) {

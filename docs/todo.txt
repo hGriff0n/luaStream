@@ -1,5 +1,3 @@
-improve type safety of luamanips
-move luamanips to a luaM_ syntax?
-add copy constructors for luaState and luaStream
+add serialization and deserialization functions to support move objects between lua_States
 add various impl details to luaState and luaStream
 change pushObj to push?

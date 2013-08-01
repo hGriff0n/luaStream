@@ -12,7 +12,7 @@ int main(int argc,const char* argv[]) {
 	lua::luastream str;
 	bool test = true;
 	try {
-		str << 5 << 4 << 3 << 2 << 1 << lua::pack(3) << lua::unpack();
+		str << 5 << 4 << 3 << 2 << 1 << luaM_pack(3) << luaM_insert(-1) << luaM_unpack();
 	}
 	catch (lua::error& e) {
 		cout << e.what();
