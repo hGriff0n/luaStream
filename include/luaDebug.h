@@ -31,7 +31,7 @@ namespace lua {
 		for(int i=start(obj);i!=end(obj)+1;++i) {
 			// end returns size of lua stack
 			// start returns 1 or x if stack below x is unneccessary (?) Is this a good thing?
-			debugger.pass(printIndex(toluaCore(obj),i));
+			debugger.pass(printIndex(obj,i));
 		}
 		debugger.pass(debugBody(obj));
 		debugger.flush();
@@ -44,6 +44,6 @@ namespace lua {
 	int end(obj);						-- Returns the index of the top of the luaStack of the passed obj
 	string debugHead(obj);				-- Returns the custom debug header for the passed obj
 	string debugBody(obj);				-- Returns other state information for the passed obj
-	lua_State* toluaCore(obj);			-- Overload function that returns the core lua_State of the passed obj (extensible to luaState,luastream,etc.)
+	operator lua_State*;				-- Class conversion operator to lua_State* must be defined
 	*/
 };

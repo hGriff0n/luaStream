@@ -7,7 +7,7 @@ namespace lua {
 
 	std::string printIndex(lua_State* stack,int index) {
 		std::stringstream stream;
-		stream << ">at index " << index << "(" << toNegIndex(stack,index) << ") { " << std::setw(9);
+		stream << " >at index " << index << "(" << toNegIndex(stack,index) << ") { " << std::setw(9);
 			switch(lua_type(stack,index)) {
 				case LUA_TNIL:
 					stream << std::left << "nil";

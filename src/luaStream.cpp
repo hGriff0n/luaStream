@@ -22,8 +22,7 @@ namespace lua {
 			impl() {};
 			~impl() {};
 
-			// static ???
-			void close(luastream& master) {
+			/*static */void close(luastream& master) {
 
 			};
 	};
@@ -34,7 +33,6 @@ namespace lua {
 	luastream::luastream(lua_State* L) : stack(L),state(new impl()) {
 		//state->sizeChange = num;
 	};
-	//luastream(const luastream& copy) : stack(copy.stack),state(new impl()) {};
 	luastream::~luastream() {
 		state->close(*this);
 		delete state;
@@ -44,55 +42,49 @@ namespace lua {
 
 	luaState& luastream::get() { return stack; };
 	lua_State* luastream::operator*(void) { return *stack; };
+	luastream::operator lua_State*() { return stack; };
 
 	// luastream stack interaction
 
 	void luastream::load(file::path& p) {
-		addFile(*stack,p);
-		// stack.loadFile(p.string());
+		stack.loadfile(p.string());
 	};
 	void luastream::move(luastream& to,int num) {
 
 	};
 	bool luastream::call(std::string func,int args) {
-		lua_pushstring(*stack,func.c_str());			//	Push the name of the function onto the stack
-		lua_insert(*stack,-(args+1));					//	Insert the function under the arguments
-		return lua_pcall(*stack,args,LUA_MULTRET,0);	//	Call the function
-	};
-	bool luastream::call(int index,int numRet) {
-		return lua_pcall(*stack,(lua_gettop(*stack)-lua::toPosIndex(*stack,index)),numRet,0);
+		lua_pushstring(stack,func.c_str());				//	Push the name of the function onto the stack
+		lua_insert(stack,-(args+1));					//	Insert the function under the arguments
+		return lua_pcall(stack,args,LUA_MULTRET,0);		//	Call the function
 	};
 	void luastream::clear() {
-		lua_settop(*stack,0);
+		lua_settop(stack,0);
 	};
 
 	// luastream stack info functions
 
-	int luastream::size() { return lua_gettop(*stack); };
+	int luastream::size() { return lua_gettop(stack); };
 	bool luastream::valid(int index,int adv) {
-		return toPosIndex(*stack,index) <= (lua_gettop(*stack)+adv) && index!=0;
+		return toPosIndex(stack,index) <= (lua_gettop(stack)+adv) && index && stack.isfreeindex(index);
 	};
-	std::string luastream::typeat(int index) { return lua_typename(*stack,index); };
+	std::string luastream::typeat(int index) { return lua_typename(stack,index); };
 	bool luastream::typecheck(int index,int type) {	
-		if (type == LUA_TFUNCTION) {
-			return lua_isfunction(*stack,index);
-		} else
-			return (lua_type(*stack,index) == type);
+		return (lua_type(stack,index) == type);
 	};
 
 	// luastream stack size operators
 
 	luastream& luastream::operator--() {
-		if (lua_gettop(*stack) == 0) throw error("luastream decrement","Stack is already empty");
-		lua_pop(*stack,1);
+		if (lua_gettop(stack) == 0) throw error("luastream decrement","Stack is already empty");
+		lua_pop(stack,1);
 		return *this;
 	};
 	luastream& luastream::operator--(int) {
 		return this->operator--();
 	};
 	luastream& luastream::operator++() {
-		if (!lua_checkstack(*stack,1)) throw error("luastream increment","Stack is full");
-		lua_pushnil(*stack);
+		if (!lua_checkstack(stack,1)) throw error("luastream increment","Stack is full");
+		lua_pushnil(stack);
 		return *this;
 	};
 	luastream& luastream::operator++(int) {
@@ -102,59 +94,59 @@ namespace lua {
 	// luastream stream operator overloads
 	
 	luastream& operator<<(luastream& str,int value) {
-		pushObj(*str,value);
+		pushObj(str,value);
 		return str;
 	};
 	luastream& operator<<(luastream& str,double value) {
-		pushObj(*str,value);
+		pushObj(str,value);
 		return str;
 	};
 	luastream& operator<<(luastream& str,const char* value) {
-		pushObj(*str,value);
+		pushObj(str,value);
 		return str;
 	};
 	luastream& operator<<(luastream& str,std::string value) {
-		pushObj(*str,value);
+		pushObj(str,value);
 		return str;
 	};
 	luastream& operator<<(luastream& str,bool value) {
-		pushObj(*str,value);
+		pushObj(str,value);
 		return str;
 	};
 
 	luastream& operator>>(luastream& str,int& var) {
-		if (!lua_isnumber(*str,-1)) throw lua::error("luastream extraction (int)","Data type mismatch");
-		setcvar(*str,var);
+		if (!str.typecheck(-1,LUA_TNUMBER)) throw lua::error("luastream extraction (int)","Data type mismatch");
+		setcvar(str,var);
 		return str;
 	};
 	luastream& operator>>(luastream& str,double& var) {
-		if (!lua_isnumber(*str,-1)) throw lua::error("luastream extraction (double)","Data type mismatch");
-		setcvar(*str,var);
+		if (!str.typecheck(-1,LUA_TNUMBER)) throw lua::error("luastream extraction (int)","Data type mismatch");
+		setcvar(str,var);
 		return str;
 	};
 	luastream& operator>>(luastream& str,std::string& var) {
-		if (!lua_isstring(*str,-1)) throw lua::error("luastream extraction (string)","Data type mismatch");
-		setcvar(*str,var);
+		if (!str.typecheck(-1,LUA_TSTRING)) throw lua::error("luastream extraction (string)","Data type mismatch");
+		setcvar(str,var);
 		return str;
 	};
 	luastream& operator>>(luastream& str,bool& var) {
-		if (!lua_isboolean(*str,-1)) throw lua::error("luastream extraction (bool)","Data type mismatch");
-		setcvar(*str,var);
+		if (!str.typecheck(-1,LUA_TBOOLEAN)) throw lua::error("luastream extraction (bool)","Data type mismatch");
+		setcvar(str,var);
 		return str;
 	};
-
+	
 	// luastream manipulator helper functions
 	
 	void luastream::totop(luastream& str,int x) {
 		if (!str.valid(x)) throw lua::error("lManip<int> totop","Invalid lua_State index");
-		x = lua::toPosIndex(*str,x);
-		for(int i=1;i!=lua_gettop(*str)-x+1;++i) lua_insert(*str,x);		// loop might have problems
+		x = lua::toPosIndex(str,x);
+		for(int i=1;i!=(str.size()-x+1);++i) lua_insert(str,x);		// loop might have problems
 	};
 
 	// state functions
-	std::string dumpImpl() {
+	std::string dumpImpl(const char* ch) {
 		//std::stringstream temp;
-		return " ";
+		return (ch + '\n');
 	};
 
 	// debug functions
@@ -168,10 +160,9 @@ namespace lua {
 	std::string debugHead(luastream& L) {
 		return "<---luastream debug information--->\n";
 	};
-	std::string debugBody(luastream& L) {
-		return L.dumpImpl() + "\n";
-	};
-	lua_State* toluaCore(luastream& L) {
-		return *L;
+	std::string debugBody(luastream& L,const char* ch) {
+		std::stringstream temp;
+		temp << "luaState impl:\n" << debugBody(L,"\t") << "\nluastream impl:\n" << L.dumpImpl(ch) << "\n";
+		return temp.str();
 	};
 };

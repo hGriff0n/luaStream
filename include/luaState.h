@@ -3,6 +3,8 @@
 #include "lua.hpp"
 #include <functional>
 #include <string>
+//#include "luaBindings.h"		luaStream.h doesn't need luaBindings.h
+							//	could put luaState member in the impl struct
 
 namespace lua {
 
@@ -26,7 +28,6 @@ namespace lua {
 	||		openState	return - void			given - lua_State*	use - luaState::openState(<lua_State*>)
 	||
 	||	TODO:
-	||		Enable copy constructor ("clonable")
 	||		Enable storage of opening function (impl ?)
 	||		Keep a list of opened files (impl feature ?)
 	||		ranged for support ???
@@ -34,9 +35,9 @@ namespace lua {
 
 	class luaState {
 		private:
-			lua_State* L;
-			
 			struct impl;
+
+			lua_State* L;
 			impl* state;
 			//std::function<void(lua_State*)> openFunc;				// this line fails
 
@@ -47,27 +48,27 @@ namespace lua {
 			luaState();												//	default
 			luaState(lua_State*);									//	luaFunc		Enables luaState use in functions registered with lua
 			luaState(const std::function<void(lua_State*)>&);		//	functio		Provides custom function for luaState opening
-																	//				--overrides luaState::openState in constructor
-			~luaState();
+			~luaState();											//				--overrides luaState::openState in constructor
 
-			// unwrappers
+			// getters
 			lua_State* get();										//	Returns the internal lua_State*
-			lua_State* operator*(void);								//	Way to use luaState with lua functions (require lua_State*)
+			lua_State* operator*(void);
 			//std::function<void(lua_State*)> getFunc() const;		//	Returns the opening function
-			std::string dumpImpl();									//	Dumps the internal state as a string
+			std::string dumpImpl(const char*);						//	Dumps the internal state as a string
 
 			// code loading
 			bool loadfile(std::string);								//	loads a lua script into the lua_State*
 			bool loadchunk(std::string);							//	runs a chunk of code in the lua_State*
 
+			bool isfreeindex(int);
 			static void openState(lua_State*);						//	default opening function for lua_State*
 																	//	undefined in luaState.cpp  Must be defined to use default luaState
+			operator lua_State* ();
 	};
 
 	// debug overloads for luaState. Same usage as shown in luaBindings.h
 	int start(luaState&);
 	int end(luaState&);
 	std::string debugHead(luaState&);
-	std::string debugBody(luaState&);
-	lua_State* toluaCore(luaState&);
+	std::string debugBody(luaState&,const char* = "-");
 };

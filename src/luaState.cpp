@@ -11,15 +11,17 @@ namespace lua {
 
 	// luaState pimpl class definition
 	struct luaState::impl {
-		bool isLua;
-		int exitSize;
+		static const int NO_SIZE_CHANGE = -1;
 
-		impl() : isLua(false),exitSize(-1) {};
+		bool isLua;
+		int exitSize,reserved;
+
+		impl() : isLua(false),exitSize(NO_SIZE_CHANGE),reserved(0) {};
 		~impl() {};
 
-		void close(luaState& master) {
-			if (exitSize > -1 && exitSize != lua_gettop(*master))
-				lua_settop(*master,exitSize);		// Very bad procedure. Also print removals to log
+		/*static */void close(luaState& master) {
+			if (exitSize != NO_SIZE_CHANGE)
+				lua_settop(master,exitSize);		// Very bad procedure
 			if (!isLua) lua_close(*master);
 		};
 	};
@@ -29,7 +31,8 @@ namespace lua {
 	luaState::luaState() : L(luaL_newstate()),state(new luaState::impl())/*,opener(luaState::openState)*/ {
 		luaState::openState(L);
 	};
-	luaState::luaState(lua_State* stack) : L(stack),state(new luaState::impl())/*,opener(luaState::openState)*/ {
+	luaState::luaState(lua_State* stack)
+			: L(stack),state(new luaState::impl())/*,opener(luaState::openState)*/ {
 		// state->exitSize = lua_gettop(stack)+num;
 		state->isLua = true;
 	};
@@ -37,13 +40,8 @@ namespace lua {
 			: L(luaL_newstate()),state(new luaState::impl())/*,opener(openFunc)*/ {
 		openFunc(L);
 	};
-	/*luaState::luaState(const luaState&); //: L(lua_newthread(*copy))/*,opener(copy.getFunc()) {
-		opener(L);
-
-		Way to set luaState so that it can't delete the new thread while thisState is running
-		Various setters to avoid runins
-	}; Copy values on stack and use same opening function. Define elsewhere*/
 	luaState::~luaState() {
+		//luaState::impl::close(*this);
 		state->close(*this);
 		delete state;
 	};
@@ -55,9 +53,12 @@ namespace lua {
 	/*std::function<void(lua_State*)> luaState::getFunc() const {
 		return opener;
 	};*/
-	std::string luaState::dumpImpl() {
+	std::string luaState::dumpImpl(const char* ch) {
 		std::stringstream temp;
-
+		temp << ch << "-- isluaFunc: " << ((state->isLua) ? "true" : "false") << "\n";
+		temp << ch << "-- exitSize: " << state->exitSize << "\n";
+		temp << ch << "-- reserved: " << state->reserved << "\n";
+		return temp.str();
 	};
 
 	// luaState code loading
@@ -69,6 +70,12 @@ namespace lua {
 		return luaL_dostring(L,chunk.c_str());
 	};
 
+	bool luaState::isfreeindex(int idx) {
+		return idx >= (this->state->reserved);
+	};
+
+	luaState::operator lua_State*() { return L; };
+
 	// debug functions
 
 	int start(luaState& L) {
@@ -76,15 +83,13 @@ namespace lua {
 		return 1;
 	};
 	int end(luaState& L) {
-		return lua_gettop(*L);
+		return lua_gettop(L);
 	};
 	std::string debugHead(luaState& L) {
 		return "<---luaState debug information--->\n";
 	};
-	std::string debugBody(luaState& L) {
-		return (L.dumpImpl()+"\n");
+	std::string debugBody(luaState& L,const char* ch) {
+		return (L.dumpImpl(ch)+"\n");
 	};
-	lua_State* toluaCore(luaState& L) {
-		return *L;
-	};
+
 };

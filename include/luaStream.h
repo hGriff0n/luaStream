@@ -51,35 +51,34 @@ namespace lua {
 			struct impl;
 			impl* state;
 
-			luastream(const luastream&);			// copy
-			luastream& operator=(const luastream&);
+			luastream& operator=(const luastream&);		// delete function keyword not currently supported in vs2012
+			luastream(const luastream&);
 		public:
 			// constructors/destructors
 			luastream();							// default
 			luastream(lua_State*);					// luaFunc		Enables luastream use in functions registered with lua
-			//luastream(const luastream&);
 			~luastream();
 
 			// state functions
-			std::string dumpImpl();					//	Returns the internal state as a string
+			std::string dumpImpl(const char*);		//	Returns the internal state as a string
 
 			// stack getters
 			luaState& get();						//	Returns internal luaState&
-			lua_State* operator*(void);				//	Returns internal lua_State*. Way to use luastream with lua functions (require lua_State*)
+			lua_State* operator*(void);				//	Returns internal lua_State*
+			operator lua_State* ();					//	Conversion operator
 
 			// stack interaction
 			void load(file::path&);					//	Load a file into lua
 			void move(luastream&,int=-1);			//	Move values into the passed luastream. Passes all values by default
 			bool call(std::string,int=0);			//	Calls the passed function with x arguments. Defaults to 0 arguments
-			bool call(int,int=LUA_MULTRET);			//	Wrapper over lua_pcall
 			void clear();							//	Clears the stack of all values
 
 			// stack info functions
 			int size();								//	Returns the number of values in the stack
 			bool valid(int,int=0);					//	Is the passed index a valid lua index. Second arg adds to the stack size
 													//	(Stack's expected future size at time of use) (defaults to no change)
-			std::string typeat(int);				//	Returns the type of the value at stack[index]
-			bool typecheck(int,int);
+			std::string typeat(int);				//	Returns the type of the value at stack[index]		-- Mark
+			bool typecheck(int,int);				//	Checks if the value at stack[index] is the passed type
 
 			// stack size operators
 			luastream& operator--();				//	Decreases the stack's size by one. Removes the top value from the stack
@@ -89,14 +88,14 @@ namespace lua {
 
 			// stream operator overloads		-- override these to enable insertion and extraction of custom types
 			// do not override with templates if you want the manipulators to work (???)
-			friend luastream& operator<<(luastream&,int);
-			friend luastream& operator<<(luastream&,double);
+			friend luastream& operator<<(luastream&,lua_Integer);
+			friend luastream& operator<<(luastream&,lua_Number);
 			friend luastream& operator<<(luastream&,const char*);
 			friend luastream& operator<<(luastream&,std::string);
 			friend luastream& operator<<(luastream&,bool);
 
-			friend luastream& operator>>(luastream&,int&);
-			friend luastream& operator>>(luastream&,double&);
+			friend luastream& operator>>(luastream&,lua_Integer&);
+			friend luastream& operator>>(luastream&,lua_Number&);
 			friend luastream& operator>>(luastream&,std::string&);
 			friend luastream& operator>>(luastream&,bool&);
 
@@ -108,6 +107,5 @@ namespace lua {
 	int start(luastream&);
 	int end(luastream&);
 	std::string debugHead(luastream&);
-	std::string debugBody(luastream&);
-	lua_State* toluaCore(luastream&);
+	std::string debugBody(luastream&,const char* = "-");
 };
